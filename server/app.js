@@ -4,8 +4,8 @@ const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const Auth = require('./middleware/auth');
 const models = require('./models');
-
 const app = express();
+const mysql = require('mysql2');
 
 app.set('views', `${__dirname}/views`);
 app.set('view engine', 'ejs');
@@ -14,6 +14,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
+
+var db = mysql.createConnection({
+  user: 'root',
+  password: '',
+  database: 'shortly'
+});
+db.connect((err) => {
+  if (err) {
+    console.log('Error in db connection');
+  }
+});
 
 
 app.get('/',
@@ -78,28 +89,45 @@ app.post('/links',
 /************************************************************/
 
 app.post('/signup',
-  (req, res, next) => {
+  (req, res) => {
     models.Users.create(req.body)
       .then((results)=> {
-        res.status(201).send(results);
+        res.redirect('/');
       })
       .catch((err) => {
-        console.log(err);
-        res.sendStatus(500);
+        res.redirect('/signup');
       });
   });
 
 
 app.post('/login',
-  (req, res, next) => {
-
-    // check users DB to see if username
-
-
+  (req, res) => {
     console.log('REQ BODYYYY', req.body);
     console.log('REQ', req);
-    models.users.compare(attempted, password, salt);
+    var queryString = 'SELECT password, salt FROM Users WHERE username = ?';
+    var queryArgs = [req.body.username];
+    db.query(queryString, queryArgs, (err, results) => {
+      if (err) {
+        console.log('error getting PW from Users');
+      } else {
+        console.log('RESSSSSSULTS', results);
+        if (!results.length) {
+          console.log('fail');
+          res.redirect('/login');
+        } else {
+          var hashedPW = results[0].password;
+          var salt = results[0].salt;
+          if (models.Users.compare(req.body.password, hashedPW, salt)) {
+            res.redirect('/');
+          } else {
+            console.log('incorrect attempt');
+            res.redirect('/login');
+          }
+        }
+      }
+    });
   });
+
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
