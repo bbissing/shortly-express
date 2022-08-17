@@ -15,16 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 
-var db = mysql.createConnection({
-  user: 'root',
-  password: '',
-  database: 'shortly'
-});
-db.connect((err) => {
-  if (err) {
-    console.log('Error in db connection');
-  }
-});
+
 
 
 app.get('/',
@@ -102,30 +93,20 @@ app.post('/signup',
 
 app.post('/login',
   (req, res) => {
-    console.log('REQ BODYYYY', req.body);
-    console.log('REQ', req);
-    var queryString = 'SELECT password, salt FROM Users WHERE username = ?';
-    var queryArgs = [req.body.username];
-    db.query(queryString, queryArgs, (err, results) => {
-      if (err) {
-        console.log('error getting PW from Users');
-      } else {
-        console.log('RESSSSSSULTS', results);
-        if (!results.length) {
-          console.log('fail');
-          res.redirect('/login');
+    models.Users.get({username: req.body.username})
+      .then((results) => {
+        console.log('RESSULTSS', results);
+        if (models.Users.compare(req.body.password, results.password, results.salt)) {
+          res.redirect('/');
         } else {
-          var hashedPW = results[0].password;
-          var salt = results[0].salt;
-          if (models.Users.compare(req.body.password, hashedPW, salt)) {
-            res.redirect('/');
-          } else {
-            console.log('incorrect attempt');
-            res.redirect('/login');
-          }
+          console.log('incorrect attempt');
+          res.redirect('/login');
         }
-      }
-    });
+      })
+      .catch((err) => {
+        console.log('fail');
+        res.redirect('/login');
+      });
   });
 
 
