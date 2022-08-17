@@ -95,16 +95,13 @@ app.post('/login',
   (req, res) => {
     models.Users.get({username: req.body.username})
       .then((results) => {
-        console.log('RESSULTSS', results);
         if (models.Users.compare(req.body.password, results.password, results.salt)) {
           res.redirect('/');
         } else {
-          console.log('incorrect attempt');
           res.redirect('/login');
         }
       })
       .catch((err) => {
-        console.log('fail');
         res.redirect('/login');
       });
   });
