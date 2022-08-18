@@ -388,7 +388,6 @@ describe('', function() {
       it('sets a new cookie on the response when a session is initialized', function(done) {
         var requestWithoutCookie = httpMocks.createRequest();
         var response = httpMocks.createResponse();
-
         createSession(requestWithoutCookie, response, function() {
           var cookies = response.cookies;
           expect(cookies['shortlyid']).to.exist;
@@ -453,6 +452,9 @@ describe('', function() {
               requestWithCookies.cookies.shortlyid = hash;
 
               createSession(requestWithCookies, secondResponse, function() {
+                console.log('REQ:', requestWithCookies);
+                console.log('secondREs: ', secondResponse);
+                console.log('IDHERE: ', userId);
                 var session = requestWithCookies.session;
                 expect(session).to.be.an('object');
                 expect(session.user.username).to.eq(username);
