@@ -2,48 +2,41 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-  console.log('REQUEST IS THIS:', req);
-  console.log('RESPONSE IS HERE:', res);
-
-  if (!req.cookies.length) {
+  console.log('test');
+  if (!req.cookies) {
     models.Sessions.create()
       .then(() => {
         models.Sessions.getAll()
           .then((results) => {
-            console.log('RESSSULT', results);
+            console.log('Auth: With Cookies');
             req.session = {hash: results[results.length - 1].hash};
             res.cookies.shortlyid = {value: 'shortlyid=' + results.hash};
-            if (Object.keys(req.cookies).length) {
-              for (var rowIndex in results) {
-                console.log('THIS IS THE NEW LOG', rowIndex, req.cookies);
-                if (results[rowIndex].hash === req.cookies.shortlyid) {
-                  req.session.hash = results[rowIndex].hash;
-                  req.session.userId = results[rowIndex].userId;
-                  models.Users.get({'id': results[rowIndex].userId.toString()})
-                    .then((results) => {
-                      console.log('disone', results);
-                      req.session.user = {username: results.username};
-                      console.log('disone2222', req.session);
-                      // res.end('ok');
-                      next();
-                    })
-                    .catch((err) => {
-                      console.log('****', err);
-                    });
-                }
+
+            for (var rowIndex in results) {
+              if (results[rowIndex].hash === res.cookies.shortlyid) {
+                req.session.hash = results[rowIndex].hash;
+                req.session.userId = results[rowIndex].userId;
+                models.Users.get({'id': results[rowIndex].userId.toString()})
+                  .then((results) => {
+                    req.session.user = {username: results.username};
+                    next();
+                  })
+                  .catch((err) => {
+                    console.log('****', err);
+                  });
               }
-              next();
-            } else {
-              next();
             }
+            next();
           })
           .catch((err) => {
-            console.log('MADDDD', err);
+            // console.log('MADDDD', err);
           });
       })
       .catch((err) => {
         console.log('OUTER', err);
       });
+  } else {
+    next();
   }
 };
 
