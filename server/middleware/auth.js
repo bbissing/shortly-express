@@ -19,10 +19,13 @@ module.exports.createSession = (req, res, next) => {
                 if (results[rowIndex].hash === req.cookies.shortlyid) {
                   req.session.hash = results[rowIndex].hash;
                   req.session.userId = results[rowIndex].userId;
-                  models.Users.get({'id': results[rowIndex].userId})
+                  models.Users.get({'id': results[rowIndex].userId.toString()})
                     .then((results) => {
                       console.log('disone', results);
-                      req.session.user = results.username;
+                      req.session.user = {username: results.username};
+                      console.log('disone2222', req.session);
+                      // res.end('ok');
+                      next();
                     })
                     .catch((err) => {
                       console.log('****', err);
