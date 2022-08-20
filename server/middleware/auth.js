@@ -2,21 +2,37 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-
+  // different format values coming in
   if (req.cookies && Object.keys(req.cookies).length) {
-    var currentHash = req.cookies.shortlyid.split('=')[1];
+    if (req.cookies.shortlyid.includes('=')) {
+      var currentHash = req.cookies.shortlyid.split('=')[1];
+    } else {
+      var currentHash = req.cookies.shortlyid;
+    }
     // verify that the cookie is valid (i.e., it is a session that is stored in your database).
     models.Sessions.get({hash: currentHash})
       .then((results) => {
-        console.log('Results', results);
         // looks up the user data related to that session,
         // and assigns an object to a session property on the request that contains relevant user information.
-        req.session = {userId: results.userId, hash: currentHash};
+        if (results.user) {
+          req.session = {userId: results.userId, hash: currentHash, user: {username: results.user.username}};
+        } else {
+          req.session = {userId: results.userId, hash: currentHash};
+        }
         next();
       })
       // If an incoming cookie is not valid, what do you think you should do with that session and cookie?
+      // clears and reassigns a new cookie if there is no session assigned to the cookie
       .catch((err) => {
-        console.log('Idk yet', err);
+        models.Sessions.create()
+          .then((results) => {
+            models.Sessions.getAll()
+              .then((results) => {
+                var newHash = results[results.length - 1].hash;
+                res.cookies.shortlyid = 'shortlyid=' + newHash;
+                next();
+              });
+          });
       });
   } else {
     // generate a session with a unique hash and store it the sessions database.
