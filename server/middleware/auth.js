@@ -45,6 +45,8 @@ module.exports.createSession = (req, res, next) => {
             res.cookies = {shortlyid: {value: 'shortlyid=' + newHash}};
             // according to test: add session to request
             req.session = {hash: newHash};
+            // console.log('AUTH: NEW SESSION - RESPONSE:', res.cookies);
+            // console.log('AUTH: NEW SESSION - REQUEST:', req.session);
             next();
           })
           .catch((err) => {

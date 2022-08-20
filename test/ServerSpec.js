@@ -520,6 +520,7 @@ describe('', function() {
       requestWithSession('http://127.0.0.1:4569/', function(error, res, body) {
         if (error) { return done(error); }
         var cookies = cookieJar.getCookies('http://127.0.0.1:4569/');
+        // console.log('Spec Test Cookies:', cookies);
         expect(cookies.length).to.equal(1);
         done();
       });
