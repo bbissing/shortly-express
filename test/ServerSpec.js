@@ -451,6 +451,9 @@ describe('', function() {
               var requestWithCookies = httpMocks.createRequest();
               requestWithCookies.cookies.shortlyid = hash;
 
+              console.log('TEST REQ,', requestWithCookies);
+              console.log('TEST RES', secondResponse);
+
               createSession(requestWithCookies, secondResponse, function() {
                 var session = requestWithCookies.session;
                 expect(session).to.be.an('object');
