@@ -37,16 +37,14 @@ module.exports.createSession = (req, res, next) => {
   } else {
     // generate a session with a unique hash and store it the sessions database.
     models.Sessions.create()
-      .then(() => {
-        models.Sessions.getAll()
+      .then((results) => {
+        models.Sessions.get({id: results.insertId})
           .then((results) => {
-            var newHash = results[results.length - 1].hash;
+            var newHash = results.hash;
             // use this unique hash to set a cookie in the response headers. (Ask yourself: How do I set cookies using Express?).
-            res.cookies = {shortlyid: {value: 'shortlyid=' + newHash}};
-            // according to test: add session to request
+            res.cookie('shortlyid', newHash);
+            // according to test: add session to request ?
             req.session = {hash: newHash};
-            // console.log('AUTH: NEW SESSION - RESPONSE:', res.cookies);
-            // console.log('AUTH: NEW SESSION - REQUEST:', req.session);
             next();
           })
           .catch((err) => {

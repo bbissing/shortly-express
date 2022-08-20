@@ -2,12 +2,11 @@ const express = require('express');
 const path = require('path');
 const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
-const Auth = require('./middleware/auth');
 const models = require('./models');
 const app = express();
 const mysql = require('mysql2');
-
 const cookieParser = require('./middleware/cookieParser');
+const Auth = require('./middleware/auth');
 
 app.set('views', `${__dirname}/views`);
 app.set('view engine', 'ejs');
@@ -17,9 +16,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(cookieParser);
 app.use(Auth.createSession);
-
-
-
 
 
 
@@ -88,6 +84,7 @@ app.post('/signup',
   (req, res) => {
     models.Users.create(req.body)
       .then((results)=> {
+        models.Sessions.update({hash: req.session.hash}, {userId: results.insertId});
         res.redirect('/');
       })
       .catch((err) => {
@@ -111,6 +108,19 @@ app.post('/login',
       });
   });
 
+app.get('/logout',
+  (req, res) => {
+    models.Sessions.delete({hash: req.session.hash})
+      .then((results) => {
+        console.log('Results', results);
+        res.clearCookie('shortlyid');
+        res.redirect('/login');
+      })
+      .catch((err) => {
+        console.log(err);
+        res.redirect('/signup');
+      });
+  });
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail

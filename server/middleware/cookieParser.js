@@ -3,6 +3,7 @@ const parseCookies = (req, res, next) => {
     var cooks = req.headers.cookie.split('; ');
     cooks.forEach((cook) => {
       var [id, val] = cook.split('=');
+      req.cookies = req.cookies || {};
       req.cookies[id] = val;
     });
   }
